@@ -1,0 +1,12 @@
+{
+  "name": "blog",
+  "main": "server.js",
+  "dependencies": {
+    "bcrypt": "^0.8.5",
+    "body-parser": "latest",
+    "express": "latest",
+    "hapi": "latest",
+    "mongodb": "latest",
+    "mongoose": "latest"
+  }
+}
