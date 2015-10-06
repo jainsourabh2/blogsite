@@ -4,6 +4,7 @@ var Schema       = mongoose.Schema;
 var CommentSchema = new Schema({
 	ca : {type: String,trim: true}, // Comment of the Author
 	ccd : {type : Date}, //Created Date of the Comment
+        cud : {type : Date}, //Last Update Date of the Comment
 	cb : {type : String} //Comment Body
 });
 
