@@ -6,7 +6,10 @@
     "body-parser": "latest",
     "express": "latest",
     "hapi": "latest",
+    "jsonwebtoken": "^5.4.0",
     "mongodb": "latest",
-    "mongoose": "latest"
+    "mongoose": "latest",
+    "morgan": "^1.6.1",
+    "nodemon": "^1.7.1"
   }
 }

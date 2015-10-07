@@ -11,16 +11,23 @@ var bodyParser 	= require('body-parser');
 var Post       	= require('./app/models/post');
 var Author      = require('./app/models/author');
 var mongoose   	= require('mongoose');
+var config 	= require('./config'); // get our config file
 
 SALT_WORK_FACTOR = 10;
 
 //Connection to MongoDB
-mongoose.connect('mongodb://localhost/blogsite');
+mongoose.connect(config.database);
 
 // configure app to use bodyParser()
 // this will let us get the data from a POST
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+
+//fetch the secret key from our configuration.
+app.set('superSecret', config.secret); // secret variable
+
+// use morgan to log requests to the console
+app.use(morgan('dev'));
 
 var port = process.env.PORT || 9091;        // set our port
 
@@ -196,6 +203,42 @@ var router = express.Router();              // get an instance of the express Ro
     		});
         });
 
+        //Authenticate the User.(accessed at POST http://localhost/blog/authenticateauthor)
+        router.post'/authenticateauthor',function(req,res){
+ 		// find the author
+  		Author.findOne({
+			un: req.body.username
+		}, function(err, user) {
+			if (err) throw err;
+    			if (!user) {
+      				res.json({ success: false, message: 'Authentication failed. Author not found.' });
+    			} else if (user) {
+				user.comparePassword(req.body.password, function(err, isMatch) {
+				        if (err) throw err;
+        				console.log(req.body.password, isMatch); // Display Password for development only. Needs to be deleted for future.:wq
+				});
+      				// check if password matches
+      				if (!isMatch) {
+        				res.json({ success: false, message: 'Authentication failed. Wrong password.' });
+      				} else {
+        				// if user is found and password is right
+        				// create a token
+        				var token = jwt.sign(user, app.get('superSecret'), {
+          					expiresInMinutes: 60 // expires in 60 mins
+        				});
+        				// return the information including token as JSON
+        				res.json({
+          					success: true,
+          					message: 'Enjoy your token!',
+          					token: token
+        				});
+      				}   
+
+    			}
+
+  		});
+       });
+
 // REGISTER OUR ROUTES -------------------------------
 // all of our routes will be prefixed with /blog
 app.use('/blog', router);
@@ -203,4 +246,4 @@ app.use('/blog', router);
 // START THE SERVER
 // =============================================================================
 app.listen(port);
-console.log('Magic happens on port ' + port);
+console.log('App listening on port ' + port);
