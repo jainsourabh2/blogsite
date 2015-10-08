@@ -14,8 +14,7 @@ var mongoose   	= require('mongoose');
 var config 	= require('./config'); // get our config file
 var morgan	= require('morgan');
 var jwt    	= require('jsonwebtoken'); // used to create, sign, and verify tokens
-
-SALT_WORK_FACTOR = 10;
+var async	= require('async');
 
 //Connection to MongoDB
 mongoose.connect(config.database);
@@ -31,11 +30,53 @@ app.set('superSecret', config.secret); // secret variable
 // use morgan to log requests to the console
 app.use(morgan('dev'));
 
-var port = process.env.PORT || 9091;        // set our port
+var port = process.env.PORT || config.port;        // set our port
 
 // ROUTES FOR OUR API
 // =============================================================================
 var router = express.Router();              // get an instance of the express Router
+
+	// Register New Author (accessed at POST http://localhost/blog/author)
+	router.post('/author',function(req, res) {
+
+		var author 	= new Author();      // create a new instance of the Author model
+	        author.a 	= req.body.author;  // set the name (comes from the request)
+		author.dob 	= req.body.dateofbirth;
+		author.add 	= req.body.address;
+	        author.age 	= req.body.age;
+	        author.un 	= req.body.username;
+	        author.pass 	= req.body.password;
+	        author.cd 	= new Date();
+	        author.ud 	= new Date();
+
+		async.series([
+			function(callback){
+        			// save the new author and raise errors if any
+	        		author.save(function(err) {
+	        			if (err)
+               				callback(err);
+					callback();
+					});
+				},
+			function(callback){
+        			var token = jwt.sign(author, app.get('superSecret'), {
+          				expiresInMinutes: 60 // expires in 60 mins
+        				});
+        			// return the information including token as JSON
+        			res.json({
+          				success: true,
+					message: 'New Author Created.',
+          				token: token
+        			});
+				callback();
+				}
+			],
+			function(err) {
+			        if (err) return next(err);
+				}
+		);
+
+    	});
 
         //Authenticate the User.(accessed at POST http://localhost/blog/authenticateauthor)
         router.post('/authenticateauthor',function(req,res){
@@ -112,27 +153,6 @@ var router = express.Router();              // get an instance of the express Ro
 	    res.json({ message: 'BlogSite Up and Running' });   
 	});
 
-	// Register New Author (accessed at POST http://localhost/blog/author)
-	router.post('/author',function(req, res) {
-
-		var author 	= new Author();      // create a new instance of the Author model
-	        author.a 	= req.body.author;  // set the name (comes from the request)
-		author.dob 	= req.body.dateofbirth;
-		author.add 	= req.body.address;
-	        author.age 	= req.body.age;
-	        author.un 	= req.body.username;
-	        author.pass 	= req.body.password;
-	        author.cd 	= new Date();
-	        author.ud 	= new Date();
-
-        	// save the new author and raise errors if any
-	        author.save(function(err) {
-	        	if (err)
-               		res.send(err);
-            		res.json({ message: 'New Author Created!' });
-        	});
-        
-    	});
 
     	// get all the authors (accessed at GET http://localhost/blog/author)
     	router.get('/author',function(req, res) {

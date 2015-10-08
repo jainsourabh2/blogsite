@@ -2,6 +2,7 @@
   "name": "blog",
   "main": "server.js",
   "dependencies": {
+    "async": "^1.4.2",
     "bcrypt": "^0.8.5",
     "body-parser": "latest",
     "express": "latest",
