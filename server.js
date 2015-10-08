@@ -12,6 +12,8 @@ var Post       	= require('./app/models/post');
 var Author      = require('./app/models/author');
 var mongoose   	= require('mongoose');
 var config 	= require('./config'); // get our config file
+var morgan	= require('morgan');
+var jwt    	= require('jsonwebtoken'); // used to create, sign, and verify tokens
 
 SALT_WORK_FACTOR = 10;
 
@@ -35,11 +37,74 @@ var port = process.env.PORT || 9091;        // set our port
 // =============================================================================
 var router = express.Router();              // get an instance of the express Router
 
+        //Authenticate the User.(accessed at POST http://localhost/blog/authenticateauthor)
+        router.post('/authenticateauthor',function(req,res){
+ 		// find the author
+  		Author.findOne({
+			un: req.body.username
+		}, function(err, user) {
+			if (err) throw err;
+    			if (!user) {
+      				res.json({ success: false, message: 'Authentication failed. Author not found.' });
+    			} else if (user) {
+				user.comparePassword(req.body.password, function(err, isMatch) {
+				        if (err) throw err;
+        				//console.log(req.body.password, isMatch); // Display Password for development only. Needs to be deleted for future.:wq
+      					// check if password matches
+      					if (!isMatch) {
+        					res.json({ success: false, message: 'Authentication failed. Wrong password.' });
+      					} else {
+        					// if user is found and password is right
+        					// create a token
+        					var token = jwt.sign(user, app.get('superSecret'), {
+          					expiresInMinutes: 60 // expires in 60 mins
+        					});
+        					// return the information including token as JSON
+        					res.json({
+          						success: true,
+          						token: token
+        					});
+      					}
+				});   
+
+    			}
+
+  		});
+       });
+
 	// middleware to use for all requests
 	router.use(function(req, res, next) {
-	    // do logging
-	    console.log('Added to perform validation if any required');
-	    next(); // make sure we go to the next routes and don't stop here
+	    	// do logging
+	    	console.log('Added to perform validation if any required');
+		
+		// check header or url parameters or post parameters for token
+		var token = req.body.token || req.query.token || req.headers['x-access-token'];
+	
+		//decode token
+		if(token){
+			
+			// verifies secret and checks exp
+    			jwt.verify(token, app.get('superSecret'), function(err, decoded) {
+				if(err) {
+					return res.json({
+						success : false,
+						message : 'Failed to authenticate token'
+					});
+				}
+				else	{
+					req.decoded = decoded;
+					next();
+				}
+			});      
+
+		}
+		else {
+			return res.status(403).send({
+				success : false,
+				message : 'No Token provided'
+			});
+		}		
+	
 	});
 
 	// test route to make sure everything is working (accessed at GET http://localhost:9091/blog)
@@ -203,41 +268,6 @@ var router = express.Router();              // get an instance of the express Ro
     		});
         });
 
-        //Authenticate the User.(accessed at POST http://localhost/blog/authenticateauthor)
-        router.post'/authenticateauthor',function(req,res){
- 		// find the author
-  		Author.findOne({
-			un: req.body.username
-		}, function(err, user) {
-			if (err) throw err;
-    			if (!user) {
-      				res.json({ success: false, message: 'Authentication failed. Author not found.' });
-    			} else if (user) {
-				user.comparePassword(req.body.password, function(err, isMatch) {
-				        if (err) throw err;
-        				console.log(req.body.password, isMatch); // Display Password for development only. Needs to be deleted for future.:wq
-				});
-      				// check if password matches
-      				if (!isMatch) {
-        				res.json({ success: false, message: 'Authentication failed. Wrong password.' });
-      				} else {
-        				// if user is found and password is right
-        				// create a token
-        				var token = jwt.sign(user, app.get('superSecret'), {
-          					expiresInMinutes: 60 // expires in 60 mins
-        				});
-        				// return the information including token as JSON
-        				res.json({
-          					success: true,
-          					message: 'Enjoy your token!',
-          					token: token
-        				});
-      				}   
-
-    			}
-
-  		});
-       });
 
 // REGISTER OUR ROUTES -------------------------------
 // all of our routes will be prefixed with /blog
