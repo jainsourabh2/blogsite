@@ -15,6 +15,7 @@ var config 	= require('./config'); // get our config file
 var morgan	= require('morgan');
 var jwt    	= require('jsonwebtoken'); // used to create, sign, and verify tokens
 var async	= require('async');
+//var authorroutes= require('./app/routes/author')(app);
 
 //Connection to MongoDB
 mongoose.connect(config.database);
@@ -60,7 +61,7 @@ var router = express.Router();              // get an instance of the express Ro
 				},
 			function(callback){
         			var token = jwt.sign(author, app.get('superSecret'), {
-          				expiresInMinutes: 60 // expires in 60 mins
+          				expiresInMinutes: config.expireInMins
         				});
         			// return the information including token as JSON
         			res.json({
