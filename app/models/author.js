@@ -11,8 +11,9 @@ var AuthorSchema = new Schema({
         age : {type : Number , min:5 , max:20}, //Age of the Author. It can be minium 5 and maximum 20.
         un : {type : String,required: true, index: { unique: true }}, // username of the Author.
         pass : {type : String,required: true}, //Password of the Author
-		cd : {type : Date}, //Create Date of the Post
-		ud : {type : Date} //Last Updated Date of the Post		
+	cd : {type : Date}, //Create Date of the Post
+	ud : {type : Date}, //Last Updated Date of the Post	
+	ts : {type : Date} //Temporary Timestamp for creation of token	
 });
 
 AuthorSchema.pre('save', function(next) { 

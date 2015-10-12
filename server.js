@@ -42,7 +42,7 @@ var router = express.Router();              // get an instance of the express Ro
 
 		var author 	= new Author();      // create a new instance of the Author model
 	        author.a 	= req.body.author;  // set the name (comes from the request)
-		author.dob 	= req.body.dateofbirth;
+		author.dob 	= new Date(req.body.dob);
 		author.add 	= req.body.address;
 	        author.age 	= req.body.age;
 	        author.un 	= req.body.username;
@@ -61,7 +61,7 @@ var router = express.Router();              // get an instance of the express Ro
 				},
 			function(callback){
         			var token = jwt.sign(author, app.get('superSecret'), {
-          				expiresInMinutes: config.expireInMins
+          				expiresIn: config.expireInSeconds
         				});
         			// return the information including token as JSON
         			res.json({
@@ -73,7 +73,11 @@ var router = express.Router();              // get an instance of the express Ro
 				}
 			],
 			function(err) {
-			        if (err) return next(err);
+			        if (err)
+					{
+					console.log(err);
+					return(err);
+					}
 				}
 		);
 
@@ -98,8 +102,9 @@ var router = express.Router();              // get an instance of the express Ro
       					} else {
         					// if user is found and password is right
         					// create a token
+						user.ts = new Date();
         					var token = jwt.sign(user, app.get('superSecret'), {
-          					expiresInMinutes: 60 // expires in 60 mins
+          					expiresIn: config.expireInSeconds // expires in 60 mins
         					});
         					// return the information including token as JSON
         					res.json({
