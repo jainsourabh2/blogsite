@@ -6,6 +6,8 @@
     "bcrypt": "^0.8.5",
     "body-parser": "latest",
     "express": "latest",
+    "file-stream-rotator": "0.0.6",
+    "fs": "0.0.2",
     "hapi": "latest",
     "jsonwebtoken": "^5.4.0",
     "mongodb": "latest",
